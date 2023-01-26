@@ -1,46 +1,25 @@
-/*
- * ovmsckf_nodelet_class.h
- *
- *  Created on: 2016/09/18
- *      Author: cryborg21
- */
-#ifndef ovmsckf_nodelet_CLASS_SRC_ovmsckf_nodelet_CLASS_H_
-#define ovmsckf_nodelet_CLASS_SRC_ovmsckf_nodelet_CLASS_H_
+#ifndef ovtransform_nodelet_CLASS_SRC_ovtransform_nodelet_CLASS_H_
+#define ovtransform_nodelet_CLASS_SRC_ovtransform_nodelet_CLASS_H_
 #include <nodelet/nodelet.h>
-#include <ros/ros.h>
-#include <sensor_msgs/Imu.h>
-#include <iostream>
-
-#if ROS_AVAILABLE == 1
-#include "ros/ROS1Visualizer.h"
-#include <ros/ros.h>
-#elif ROS_AVAILABLE == 2
-#include "ros/ROS2Visualizer.h"
-#include <rclcpp/rclcpp.hpp>
-#endif
-
-#include "core/VioManager.h"
-#include "core/VioManagerOptions.h"
-#include "utils/dataset_reader.h"
-
+#include "transform.h"
 
 using namespace ov_msckf;
 using namespace ov_core;
 using namespace ov_type;
 using namespace ov_init;
-namespace ovmsckf_nodelet_ns
+namespace transform_nodelet_ns
 {
-class OvmsckfNodeletClass : public nodelet::Nodelet
+class OvtransformNodeletClass : public nodelet::Nodelet
 {
 public:
-    OvmsckfNodeletClass();
-    ~OvmsckfNodeletClass();
+    OvtransformNodeletClass();
+    ~OvtransformNodeletClass();
     void callback_inertial(const sensor_msgs::Imu::ConstPtr &msg);
     virtual void onInit();
 private:
     std::string config_path;
     //std::shared_ptr<ov_core::YamlParser>  parser = std::make_shared<ov_core::YamlParser>(config_path);
-    ov_core::ImuData imu_message;
+    // ov_core::ImuData imu_message;
 	ros::Subscriber sub_imu;
     std::shared_ptr<VioManager> sys;
 	//   std:: string topic_imu = "/race4/zedm/zed_node/imu/data_raw";
@@ -54,6 +33,6 @@ private:
     std::shared_ptr<ROS2Visualizer> viz;
     #endif
 };
-} // namespace ovmsckf_nodelet_ns
+} // namespace transform_nodelet_ns
 
 #endif /* ovmsckf_nodelet_CLASS_SRC_ovmsckf_nodelet_CLASS_H_ */

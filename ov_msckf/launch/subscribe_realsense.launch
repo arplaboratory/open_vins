@@ -82,6 +82,10 @@
         <!-- remap from="/OvmsckfNodeletClass_loader/odomworld" to="/OvmsckfNodeletClass_loader/odomworld_laptop" / -->
 	</node>
 
+    <node name="transform_node" type="transform_node" pkg="ov_transform"  output="screen">
+        <param name="config_path"            type="string" value="$(arg config_path)" />
+    </node>
+
     <arg name="tf_namespace"              default="drone31"/>
     <arg name="device_type_camera_f"      default="d4.5"/>
     <arg name="camera_f"                  default="cam1"/>              <!-- Note: Replace with camera name -->

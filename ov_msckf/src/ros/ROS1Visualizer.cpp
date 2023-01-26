@@ -480,9 +480,11 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
     
     // Transform the body pose in World frame
     Eigen::Matrix4d T_BtoW = Eigen::Matrix4d::Identity();
-    T_BtoW.block(0,3,3,1) = T_B0toW * T_BtoB0.block(0,3,3,1);
+    T_BtoW.block(0,3,3,1) = T_B0toW.block(0,0,3,3) * T_BtoB0.block(0,3,3,1);
     T_BtoW.block(0,0,3,3) =  T_B0toW.block(0,0,3,3) * T_BtoB0.block(0,0,3,3);
-    
+
+    // PRINT_INFO("<<<T_BinW");
+    // print_tf(T_BtoW);
     // Eigen::Matrix<double, 4,1> q_BinW  = ov_core::rot_2_quat(T_BtoW.block(0,0,3,3));
     Eigen::Quaterniond  q_BinW;
     Eigen::Matrix3d R_BtoW =  T_BtoW.block(0,0,3,3);
@@ -500,20 +502,7 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
     Eigen::Vector3d w_BinB (state_plus_world(10),state_plus_world(11),state_plus_world(12));
     Eigen::Vector3d w_iinIMU (state_plus_world(10),state_plus_world(11),state_plus_world(12));
     Eigen::Vector3d v_BinB = - T_ItoB.block(0,0,3,3) *skew_ItoB * w_iinIMU + T_ItoB.block(0,0,3,3) * v_iinIMU ;
-
-    //std::cout<<"R_BtoB0: "<< R_BtoB0.determinant() <<std::endl; 
-    //Eigen::Matrix3d R_ItoM = T_ItoM.block(0,0,3,3);
-    //std::cout<<"R_ItoM: "<< R_ItoM.determinant() <<std::endl;
-    //Eigen::Matrix3d R_ItoB = T_ItoB.block(0,0,3,3);
-    //std::cout<<"R_ItoB: "<< R_ItoB.determinant() <<std::endl;
-    //Eigen::Matrix3d R_BtoI = T_BtoI.block(0,0,3,3);
-    //std::cout<<"R_BtoI: "<< R_BtoI.determinant() <<std::endl;   
-
-    // Eigen::Vector3d w_iinI (state_plus_world(10),state_plus_world(11),state_plus_world(12));
-    // Eigen::Vector3d w_BinB =  w_iinI;
-    // Eigen::Vector3d v_BinB = T_ItoB.block(0,0,3,3)*v_iinIMU + skew_ItoB*T_ItoB.block(0,0,3,3)*w_iinI;
-    // Eigen::Vector3d v_BinW = T_BtoW.block(0,0,3,3).transpose() * v_BinB;
-    // Eigen::Vector3d v_BinB0 = T_BtoB0.block(0,0,3,3).transpose() * v_BinB;
+    
     Eigen::Quaterniond T_BinB0_from_q;
     Eigen::Quaterniond T_BinW_from_q;
     T_BinB0_from_q.x() = q_BinB0.x();
