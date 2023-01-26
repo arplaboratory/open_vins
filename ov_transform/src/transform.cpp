@@ -213,15 +213,15 @@ void Transform_calculator::odomCallback(const nav_msgs::OdometryPtr& msg_in) {
 
     odomBinW.pose.covariance = odomIinM.pose.covariance;
     
-    // if ( odomBinW.pose.covariance(0) > 0.05){
-    //   PRINT_ERROR(RED "Drift detected: pose covariance of x-x is too high %.6f\n",  odomBinW.pose.covariance(0));
-    // }
-    // if ( odomBinW.pose.covariance(7) > 0.05){
-    //   PRINT_ERROR(RED "Drift detected: pose covariance of y-y is too high %.6f\n",  odomBinW.pose.covariance(7));
-    // }
-    // if ( odomBinW.pose.covariance(14) > 0.05){
-    //   PRINT_ERROR(RED "Drift detected: pose covariance of z-z is too high %.6f\n",  odomBinW.pose.covariance(14));
-    // }
+    if ( odomBinW.pose.covariance[0] > 0.05){
+      PRINT_ERROR(RED "Drift detected: pose covariance of x-x is too high %.6f\n",  odomBinW.pose.covariance[0]);
+    }
+    if ( odomBinW.pose.covariance[7] > 0.05){
+      PRINT_ERROR(RED "Drift detected: pose covariance of y-y is too high %.6f\n",  odomBinW.pose.covariance[7]);
+    }
+    if ( odomBinW.pose.covariance[14] > 0.05){
+      PRINT_ERROR(RED "Drift detected: pose covariance of z-z is too high %.6f\n",  odomBinW.pose.covariance[14]);
+    }
       
     pub_odomworld.publish(odomBinW);
 
