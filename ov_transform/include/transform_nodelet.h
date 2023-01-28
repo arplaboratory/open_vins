@@ -1,37 +1,52 @@
 #ifndef ovtransform_nodelet_CLASS_SRC_ovtransform_nodelet_CLASS_H_
 #define ovtransform_nodelet_CLASS_SRC_ovtransform_nodelet_CLASS_H_
 #include <nodelet/nodelet.h>
-#include "transform.h"
+#include "../include/transform.h"
 
 using namespace ov_msckf;
 using namespace ov_core;
 using namespace ov_type;
 using namespace ov_init;
-namespace transform_nodelet_ns
+
+namespace ovtransform_nodelet_ns
 {
 class OvtransformNodeletClass : public nodelet::Nodelet
 {
 public:
     OvtransformNodeletClass();
     ~OvtransformNodeletClass();
-    void callback_inertial(const sensor_msgs::Imu::ConstPtr &msg);
-    virtual void onInit();
+    void onInit();
+    // ros::Subscriber sub_odomimu;
+    void odomCallback(const nav_msgs::Odometry& msg_in);
+    void setupTransformationMatrix(std::shared_ptr<ov_core::YamlParser> parser);
+    Eigen::Matrix<double, 7, 1> print_tf(Eigen::Matrix4d T);
+    ros::Subscriber sub_odomimu;
+    ros::Publisher pub_odomworldB0;
+    ros::Publisher pub_odomworld;
 private:
     std::string config_path;
     //std::shared_ptr<ov_core::YamlParser>  parser = std::make_shared<ov_core::YamlParser>(config_path);
     // ov_core::ImuData imu_message;
-	ros::Subscriber sub_imu;
-    std::shared_ptr<VioManager> sys;
-	//   std:: string topic_imu = "/race4/zedm/zed_node/imu/data_raw";
-	//   std:: string topic_image_left = "/zedm/zed_node/left/image_rect_gray";
-	//   std:: string topic_image_right = "/zedm/zed_node/right/image_rect_gray";
-    std::shared_ptr<VioManager> _app;
-    //std::shared_ptr<ros::NodeHandle> nh = std::make_shared<ros::NodeHandle>("~");
-    #if ROS_AVAILABLE == 1
-    std::shared_ptr<ROS1Visualizer> viz;
-    #elif ROS_AVAILABLE == 2
-    std::shared_ptr<ROS2Visualizer> viz;
-    #endif
+
+    Eigen::Matrix4d T_MtoW = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d T_ItoB = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d T_BtoI = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d T_B0toW = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d T_WtoB0 = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d T_MtoB0 = Eigen::Matrix4d::Identity();
+    Eigen::Matrix<double, 7, 1> T_MtoW_eigen;
+
+    bool got_init_tf=false;
+    Eigen::Matrix4d T_init_tf = Eigen::Matrix4d::Identity();
+    Eigen::Matrix4d T_init_tf_inv = Eigen::Matrix4d::Identity();
+    Eigen::Matrix3d hat_M2B0;
+
+    int skip_count = 0;
+
+    double pub_frequency = 0.0;
+    float imu_rate = 0;
+    float odom_rate = 0;
+    double last_timestamp = 0;
 };
 } // namespace transform_nodelet_ns
 

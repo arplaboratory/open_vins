@@ -6,6 +6,7 @@ Transform_calculator::Transform_calculator(ros::NodeHandle nodeHandle, std::shar
   nh(nodeHandle), parser(parser){}
 
 void Transform_calculator::setup() {
+  ROS_INFO("<<<<<<>>>>>  Setup");
   sub_odomimu = nh.subscribe("/OvmsckfNodeletClass_loader/odomimu", 100, &Transform_calculator::odomCallback, this, ros::TransportHints().tcpNoDelay());
   pub_odomworldB0 = nh.advertise<nav_msgs::Odometry>("odomBinB0_from_transform", 100);
   pub_odomworld = nh.advertise<nav_msgs::Odometry>("odomBinworld_from_transform", 100);
@@ -89,7 +90,7 @@ Eigen::Matrix<double, 7, 1> Transform_calculator::print_tf(Eigen::Matrix4d T) {
 
 void Transform_calculator::odomCallback(const nav_msgs::OdometryPtr& msg_in) {
   nav_msgs::Odometry odomIinM = *msg_in;
-
+  PRINT_INFO("odomimu call back\n");
   if (!got_init_tf){
     Eigen::Matrix<double, 4,1> q_init_tf;
     //state(0) is the timestamp;
@@ -231,37 +232,37 @@ void Transform_calculator::odomCallback(const nav_msgs::OdometryPtr& msg_in) {
 }
 
 
-int main(int argc, char** argv) {
-  ros::init(argc, argv, "transform_node");
+// int main(int argc, char** argv) {
+//   ros::init(argc, argv, "transform_node");
 
-  ros::NodeHandle nh;
-  std::string config_path;
+//   ros::NodeHandle nh;
+//   std::string config_path;
 
-  if( !nh.getParam("transform_node/config_path", config_path) )
-    ROS_ERROR("Failed to get param config_path from server.");
-  ROS_INFO("Config path: %s", config_path.c_str());
-  // std::string config_path = "/home/chenyu/Music/ws_openvins/src/open_vins/ov_msckf/../config/rs435i/estimator_config.yaml";
-  ROS_INFO("<<<OvtransformNodeletClass Constructor");
-  auto parser = std::make_shared<ov_core::YamlParser>(config_path);
+//   if( !nh.getParam("transform_node/config_path", config_path) )
+//     ROS_ERROR("Failed to get param config_path from server.");
+//   ROS_INFO("Config path: %s", config_path.c_str());
+//   // std::string config_path = "/home/chenyu/Music/ws_openvins/src/open_vins/ov_msckf/../config/rs435i/estimator_config.yaml";
+//   ROS_INFO("<<<OvtransformNodeletClass Constructor");
+//   auto parser = std::make_shared<ov_core::YamlParser>(config_path);
   
 
-#if ROS_AVAILABLE == 1
-  parser->set_node_handler(std::make_shared<ros::NodeHandle>(nh));
-  ROS_INFO("<<<Line 29");
-#elif ROS_AVAILABLE == 2
-  parser->set_node(node);
-#endif
+// #if ROS_AVAILABLE == 1
+//   parser->set_node_handler(std::make_shared<ros::NodeHandle>(nh));
+//   ROS_INFO("<<<Line 29");
+// #elif ROS_AVAILABLE == 2
+//   parser->set_node(node);
+// #endif
 
 
-  std::string verbosity = "DEBUG";
-  parser->parse_config("verbosity", verbosity);
-  ov_core::Printer::setPrintLevel(verbosity);
-  ROS_INFO("<<<OvtransformNodeletClass Constructor 111");
-  auto trans_cal=Transform_calculator(nh, parser);
-  trans_cal.setup();
+//   std::string verbosity = "DEBUG";
+//   parser->parse_config("verbosity", verbosity);
+//   ov_core::Printer::setPrintLevel(verbosity);
+//   ROS_INFO("<<<OvtransformNodeletClass Constructor 111");
+//   auto trans_cal=Transform_calculator(nh, parser);
+//   trans_cal.setup();
 
-  ros::spin();
+//   ros::spin();
 
-  return 0;
-}
+//   return 0;
+// }
 

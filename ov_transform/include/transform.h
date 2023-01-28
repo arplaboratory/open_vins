@@ -31,18 +31,19 @@ class Transform_calculator {
  		Transform_calculator(ros::NodeHandle nodeHandle, std::shared_ptr<ov_core::YamlParser> parser);
 
 		void setup();
+        ros::Subscriber sub_odomimu;
+        ros::Publisher pub_odomworldB0;
+        ros::Publisher pub_odomworld;
+    
+        void odomCallback(const nav_msgs::OdometryPtr& msg_in);
 	private:
-		void odomCallback(const nav_msgs::OdometryPtr& msg_in);
+		
         void setupTransformationMatrix();
         Eigen::Matrix<double, 7, 1> print_tf(Eigen::Matrix4d T);
 
 		
         ros::NodeHandle nh;
         std::shared_ptr<ov_core::YamlParser> parser;
-		ros::Subscriber sub_odomimu;
-        ros::Publisher pub_odomworldB0;
-        ros::Publisher pub_odomworld;
-    
         // Transformation between vio local (IMU) frame to vicon world frame
         Eigen::Matrix4d T_MtoW = Eigen::Matrix4d::Identity();
         Eigen::Matrix4d T_ItoB = Eigen::Matrix4d::Identity();
