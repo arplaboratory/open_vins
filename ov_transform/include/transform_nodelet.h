@@ -14,7 +14,6 @@ class OvtransformNodeletClass : public nodelet::Nodelet
 {
 public:
     OvtransformNodeletClass();
-    ~OvtransformNodeletClass();
     void onInit();
     // ros::Subscriber sub_odomimu;
     void odomCallback(const nav_msgs::Odometry& msg_in);
@@ -23,6 +22,9 @@ public:
     ros::Subscriber sub_odomimu;
     ros::Publisher pub_odomworldB0;
     ros::Publisher pub_odomworld;
+    
+     ~OvtransformNodeletClass();
+    EIGEN_MAKE_ALIGNED_OPERATOR_NEW; 
 private:
     std::string config_path;
     //std::shared_ptr<ov_core::YamlParser>  parser = std::make_shared<ov_core::YamlParser>(config_path);
