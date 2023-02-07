@@ -66,7 +66,7 @@ add_library(transform_nodelet
   src/transform_nodelet.cpp
   src/transform.cpp
 )
-target_link_libraries(transform_nodelet ${thirdparty_libraries})
+target_link_libraries(transform_nodelet ${thirdparty_libraries} ${catkin_LIBRARIES})
 # if(catkin_EXPORTED_LIBRARIES)
 #  add_dependencies(transform_nodelet transform_nodelet ${catkin_EXPORTED_LIBRARIES})
 # endif()
