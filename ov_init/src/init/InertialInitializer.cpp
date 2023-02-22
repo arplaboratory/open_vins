@@ -111,7 +111,7 @@ bool InertialInitializer::initialize(double &timestamp, Eigen::MatrixXd &covaria
     FeatureHelper::compute_disparity(_db, avg_disp1, var_disp1, num_features1, newest_cam_time, newest_time_allowed);
 
     // Return if we can't compute the disparity
-    int feat_thresh = 5;
+    int feat_thresh = 15;
     if (num_features0 < feat_thresh || num_features1 < feat_thresh) {
       PRINT_WARNING(YELLOW "[init]: not enough feats to compute disp: %d,%d < %d\n" RESET, num_features0, num_features1, feat_thresh);
       return false;
