@@ -1,18 +1,22 @@
 #include "../include/transform.h"
+#include <nodelet/nodelet.h>
 
 using namespace ov_transform;
 
-Transform_calculator::Transform_calculator(ros::NodeHandle nodeHandle, std::shared_ptr<ov_core::YamlParser> parser):
-  nh(nodeHandle), parser(parser){}
+Transform_calculator::Transform_calculator(std::shared_ptr<ros::NodeHandle>  nodeHandle):
+  nh(nodeHandle){}
 
 void Transform_calculator::setup() {
-  ROS_INFO("<<<<<<>>>>>  Setup");
-  sub_odomimu = nh.subscribe("/OvmsckfNodeletClass_loader/odomimu", 100, &Transform_calculator::odomCallback, this, ros::TransportHints().tcpNoDelay());
-  pub_odomworldB0 = nh.advertise<nav_msgs::Odometry>("odomBinB0_from_transform", 100);
-  pub_odomworld = nh.advertise<nav_msgs::Odometry>("odomBinworld_from_transform", 100);
+  sub_odomimu = nh->subscribe("/OvmsckfNodeletClass_loader/odomimu", 100, &Transform_calculator::odomCallback, this, ros::TransportHints().tcpNoDelay());
+  pub_odomworldB0 = nh->advertise<nav_msgs::Odometry>("odomBinB0_from_transform", 100);
+  pub_odomworld = nh->advertise<nav_msgs::Odometry>("odomBinworld_from_transform", 100);
   ROS_INFO("<<<<<<>>>>>>Publishing: %s\n", pub_odomworldB0.getTopic().c_str());
   ROS_INFO("<<<<<<>>>>>>Publishing: %s\n", pub_odomworld.getTopic().c_str());
   setupTransformationMatrix();
+  nh->getParam("imu_rate", imu_rate);
+  nh->getParam("odom_rate", odom_rate);
+  ROS_INFO("<<<<<<>>>>>>Read from yaml: %f\n",imu_rate);
+  ROS_INFO("<<<<<<>>>>>>Read from yaml: %f\n", odom_rate);
 
 }
 
@@ -20,43 +24,67 @@ void Transform_calculator::setupTransformationMatrix(){
 
   Eigen::Matrix4d T_ItoC = Eigen::Matrix4d::Identity();
   Eigen::Matrix4d T_CtoB = Eigen::Matrix4d::Identity();
-  parser->parse_external("relative_config_imucam", "cam0", "T_cam_imu", T_ItoC); // T_cam_imu is transformation from IMU to camera coordinates from kalibr
-  parser->parse_external("relative_config_imu", "imu0", "T_cam_body", T_CtoB); // from camera-vicon calibration
-  parser->parse_external("relative_config_imu", "imu0", "update_rate", imu_rate);
-  parser->parse_external("relative_config_imu", "imu0", "odom_update_rate", odom_rate);
+
+  nh->getParam("T_cam_imu/r0/c0", T_ItoC(0,0));
+  nh->getParam("T_cam_imu/r0/c1", T_ItoC(0,1));
+  nh->getParam("T_cam_imu/r0/c2", T_ItoC(0,2));
+  nh->getParam("T_cam_imu/r0/c3", T_ItoC(0,3));
+  nh->getParam("T_cam_imu/r1/c0", T_ItoC(1,0));
+  nh->getParam("T_cam_imu/r1/c1", T_ItoC(1,1));
+  nh->getParam("T_cam_imu/r1/c2", T_ItoC(1,2));
+  nh->getParam("T_cam_imu/r1/c3", T_ItoC(1,3));
+  nh->getParam("T_cam_imu/r2/c0", T_ItoC(2,0));
+  nh->getParam("T_cam_imu/r2/c1", T_ItoC(2,1));
+  nh->getParam("T_cam_imu/r2/c2", T_ItoC(2,2));
+  nh->getParam("T_cam_imu/r2/c3", T_ItoC(2,3));
+
+  nh->getParam("T_cam_body/r0/c0", T_CtoB(0,0));
+  nh->getParam("T_cam_body/r0/c1", T_CtoB(0,1));
+  nh->getParam("T_cam_body/r0/c2", T_CtoB(0,2));
+  nh->getParam("T_cam_body/r0/c3", T_CtoB(0,3));
+  nh->getParam("T_cam_body/r1/c0", T_CtoB(1,0));
+  nh->getParam("T_cam_body/r1/c1", T_CtoB(1,1));
+  nh->getParam("T_cam_body/r1/c2", T_CtoB(1,2));
+  nh->getParam("T_cam_body/r1/c3", T_CtoB(1,3));
+  nh->getParam("T_cam_body/r2/c0", T_CtoB(2,0));
+  nh->getParam("T_cam_body/r2/c1", T_CtoB(2,1));
+  nh->getParam("T_cam_body/r2/c2", T_CtoB(2,2));
+  nh->getParam("T_cam_body/r2/c3", T_CtoB(2,3));
+
+
   pub_frequency = 1.0/odom_rate;
 
   // TODO: Check this part with Vicon later  
   bool init_world_with_vicon = false;
-  parser->parse_config("init_world_with_vicon", init_world_with_vicon);
-  if (init_world_with_vicon) {
-    std::string viconOdomWTopic;
-    parser->parse_config("viconOdomWTopic", viconOdomWTopic);
-    boost::shared_ptr<nav_msgs::Odometry const> sharedInitBodyOdominW;
-    nav_msgs::Odometry initBodyOdominW;
-    sharedInitBodyOdominW = ros::topic::waitForMessage<nav_msgs::Odometry>(viconOdomWTopic, ros::Duration(5));
-    if(sharedInitBodyOdominW != nullptr) {
-      initBodyOdominW = *sharedInitBodyOdominW;
-      PRINT_INFO("Got the init T_BtoW from vicon topic %s\n", viconOdomWTopic.c_str());
-      // parse initBodyOdominW
-      Eigen::Vector3d initBodyPosinW;
-      Eigen::Quaterniond initBodyQuatinW;
-      initBodyPosinW << initBodyOdominW.pose.pose.position.x, initBodyOdominW.pose.pose.position.y, initBodyOdominW.pose.pose.position.z;
-      initBodyQuatinW.w() = initBodyOdominW.pose.pose.orientation.w;
-      initBodyQuatinW.x() = initBodyOdominW.pose.pose.orientation.x;
-      initBodyQuatinW.y() = initBodyOdominW.pose.pose.orientation.y;
-      initBodyQuatinW.z() = initBodyOdominW.pose.pose.orientation.z;
-      T_B0toW.block(0, 0, 3, 3) = initBodyQuatinW.toRotationMatrix();
-      T_B0toW.block(0, 3, 3, 1) = initBodyPosinW;
-      T_WtoB0.block(0, 0, 3, 3) = initBodyQuatinW.toRotationMatrix().transpose();
-      T_WtoB0.block(0, 3, 3, 1) = -initBodyQuatinW.toRotationMatrix().transpose() * initBodyPosinW;
-      T_MtoB0 = T_WtoB0 * T_MtoW;
-    }
-    else {
-      PRINT_INFO("Failed to get init T_BtoW from vicon topic %s, use default T_BtoW by setting init_world_with_vicon false\n", viconOdomWTopic.c_str());
-      exit(1);
-    }
-  } 
+  // parser->parse_config("init_world_with_vicon", init_world_with_vicon);
+  // if (init_world_with_vicon) {
+  //   std::string viconOdomWTopic;
+  //   parser->parse_config("viconOdomWTopic", viconOdomWTopic);
+  //   boost::shared_ptr<nav_msgs::Odometry const> sharedInitBodyOdominW;
+  //   nav_msgs::Odometry initBodyOdominW;
+  //   sharedInitBodyOdominW = ros::topic::waitForMessage<nav_msgs::Odometry>(viconOdomWTopic, ros::Duration(5));
+  //   if(sharedInitBodyOdominW != nullptr) {
+  //     initBodyOdominW = *sharedInitBodyOdominW;
+  //     PRINT_INFO("Got the init T_BtoW from vicon topic %s\n", viconOdomWTopic.c_str());
+  //     // parse initBodyOdominW
+  //     Eigen::Vector3d initBodyPosinW;
+  //     Eigen::Quaterniond initBodyQuatinW;
+  //     initBodyPosinW << initBodyOdominW.pose.pose.position.x, initBodyOdominW.pose.pose.position.y, initBodyOdominW.pose.pose.position.z;
+  //     initBodyQuatinW.w() = initBodyOdominW.pose.pose.orientation.w;
+  //     initBodyQuatinW.x() = initBodyOdominW.pose.pose.orientation.x;
+  //     initBodyQuatinW.y() = initBodyOdominW.pose.pose.orientation.y;
+  //     initBodyQuatinW.z() = initBodyOdominW.pose.pose.orientation.z;
+  //     T_B0toW.block(0, 0, 3, 3) = initBodyQuatinW.toRotationMatrix();
+  //     T_B0toW.block(0, 3, 3, 1) = initBodyPosinW;
+  //     T_WtoB0.block(0, 0, 3, 3) = initBodyQuatinW.toRotationMatrix().transpose();
+  //     T_WtoB0.block(0, 3, 3, 1) = -initBodyQuatinW.toRotationMatrix().transpose() * initBodyPosinW;
+  //     T_MtoB0 = T_WtoB0 * T_MtoW;
+  //   }
+  //   else {
+  //     PRINT_INFO("Failed to get init T_BtoW from vicon topic %s, use default T_BtoW by setting init_world_with_vicon false\n", viconOdomWTopic.c_str());
+  //     exit(1);
+  //   }
+  // } 
     T_ItoB = T_CtoB *T_ItoC; //* T_correct ;
     T_BtoI.block(0,0,3,3) = T_ItoB.block(0,0,3,3).transpose();
     T_BtoI.block(0,3,3,1) = -T_ItoB.block(0,0,3,3).transpose() * T_ItoB.block(0,3,3,1);
@@ -90,7 +118,7 @@ Eigen::Matrix<double, 7, 1> Transform_calculator::print_tf(Eigen::Matrix4d T) {
 
 void Transform_calculator::odomCallback(const nav_msgs::OdometryPtr& msg_in) {
   nav_msgs::Odometry odomIinM = *msg_in;
-  PRINT_INFO("odomimu call back\n");
+
   if (!got_init_tf){
     Eigen::Matrix<double, 4,1> q_init_tf;
     //state(0) is the timestamp;
@@ -214,15 +242,15 @@ void Transform_calculator::odomCallback(const nav_msgs::OdometryPtr& msg_in) {
 
     odomBinW.pose.covariance = odomIinM.pose.covariance;
     
-    if ( odomBinW.pose.covariance[0] > 0.05){
-      PRINT_ERROR(RED "Drift detected: pose covariance of x-x is too high %.6f\n",  odomBinW.pose.covariance[0]);
-    }
-    if ( odomBinW.pose.covariance[7] > 0.05){
-      PRINT_ERROR(RED "Drift detected: pose covariance of y-y is too high %.6f\n",  odomBinW.pose.covariance[7]);
-    }
-    if ( odomBinW.pose.covariance[14] > 0.05){
-      PRINT_ERROR(RED "Drift detected: pose covariance of z-z is too high %.6f\n",  odomBinW.pose.covariance[14]);
-    }
+    // if ( odomBinW.pose.covariance(0) > 0.05){
+    //   PRINT_ERROR(RED "Drift detected: pose covariance of x-x is too high %.6f\n",  odomBinW.pose.covariance(0));
+    // }
+    // if ( odomBinW.pose.covariance(7) > 0.05){
+    //   PRINT_ERROR(RED "Drift detected: pose covariance of y-y is too high %.6f\n",  odomBinW.pose.covariance(7));
+    // }
+    // if ( odomBinW.pose.covariance(14) > 0.05){
+    //   PRINT_ERROR(RED "Drift detected: pose covariance of z-z is too high %.6f\n",  odomBinW.pose.covariance(14));
+    // }
       
     pub_odomworld.publish(odomBinW);
 
@@ -232,37 +260,37 @@ void Transform_calculator::odomCallback(const nav_msgs::OdometryPtr& msg_in) {
 }
 
 
-// int main(int argc, char** argv) {
-//   ros::init(argc, argv, "transform_node");
+int main(int argc, char** argv) {
+  ros::init(argc, argv, "transform_node");
 
-//   ros::NodeHandle nh;
-//   std::string config_path;
+  std::shared_ptr<ros::NodeHandle> nh = std::make_shared<ros::NodeHandle>("~");
+  std::string config_path;
+  // nh->param<std::string>("config_path", config_path, config_path);
 
-//   if( !nh.getParam("transform_node/config_path", config_path) )
-//     ROS_ERROR("Failed to get param config_path from server.");
-//   ROS_INFO("Config path: %s", config_path.c_str());
-//   // std::string config_path = "/home/chenyu/Music/ws_openvins/src/open_vins/ov_msckf/../config/rs435i/estimator_config.yaml";
-//   ROS_INFO("<<<OvtransformNodeletClass Constructor");
-//   auto parser = std::make_shared<ov_core::YamlParser>(config_path);
-  
-
-// #if ROS_AVAILABLE == 1
-//   parser->set_node_handler(std::make_shared<ros::NodeHandle>(nh));
-//   ROS_INFO("<<<Line 29");
-// #elif ROS_AVAILABLE == 2
-//   parser->set_node(node);
-// #endif
+  if( !nh->getParam("config_path", config_path) )
+    ROS_ERROR("Failed to get param config_path from server.");
+  ROS_INFO("Config path: %s", config_path.c_str());
+  // std::string config_path = "/home/chenyu/Music/ws_openvins/src/open_vins/ov_msckf/../config/rs435i/estimator_config.yaml";
+  ROS_INFO("<<<OvtransformNodeletClass Constructor");
+  nh->param<std::string>("config_path", config_path, config_path);
+  // auto parser = std::make_shared<ov_core::YamlParser>(config_path);
+    ROS_INFO("<<<OvtransformNodeletClass line 247");
 
 
-//   std::string verbosity = "DEBUG";
-//   parser->parse_config("verbosity", verbosity);
-//   ov_core::Printer::setPrintLevel(verbosity);
-//   ROS_INFO("<<<OvtransformNodeletClass Constructor 111");
-//   auto trans_cal=Transform_calculator(nh, parser);
-//   trans_cal.setup();
+  // parser->set_node_handler(nh);
+  ROS_INFO("<<<Line 29");
 
-//   ros::spin();
 
-//   return 0;
-// }
+ROS_INFO("<<<OvtransformNodeletClass line 256");
+  std::string verbosity = "DEBUG";
+  // parser->parse_config("verbosity", verbosity);
+  ov_core::Printer::setPrintLevel(verbosity);
+  ROS_INFO("<<<OvtransformNodeletClass Constructor 111");
+  auto trans_cal=Transform_calculator(nh);
+  trans_cal.setup();
+
+  ros::spin();
+
+  return 0;
+}
 

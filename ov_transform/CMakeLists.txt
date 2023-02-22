@@ -9,12 +9,12 @@ if (NOT OpenCV_FOUND)
 endif ()
 
 find_package(catkin QUIET COMPONENTS roscpp rosbag tf std_msgs geometry_msgs sensor_msgs nav_msgs visualization_msgs image_transport cv_bridge ov_core ov_init)
-
-catkin_package(CATKIN_DEPENDS roscpp roslib sensor_msgs)
+add_definitions(-DROS_AVAILABLE=1)
+catkin_package(CATKIN_DEPENDS roscpp roslib sensor_msgs ov_core)
 
 include_directories(src ${catkin_INCLUDE_DIRS})
 add_definitions(-std=c++17)
-add_definitions(-DROS_AVAILABLE=1)
+
 list(APPEND thirdparty_libraries
         ${Boost_LIBRARIES}
         ${OpenCV_LIBRARIES}
@@ -50,30 +50,53 @@ include_directories(
         ${catkin_INCLUDE_DIRS}
 )
 
-#For node
-# add_executable(transform_node src/transform.cpp)
+
+add_executable(transform_node src/transform.cpp)
+target_link_libraries(transform_node ${catkin_LIBRARIES} ${thirdparty_libraries})
+install(TARGETS transform_node
+        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+
+## For Nodelet
+## Declare a C++ library
+# add_library(transform_nodelet
+#   src/transform_nodelet.cpp
+#   src/transform.cpp
+# )
 # target_link_libraries(transform_node ${thirdparty_libraries})
+# if(catkin_EXPORTED_LIBRARIES)
+#  add_dependencies(transform_node transform_node ${catkin_EXPORTED_LIBRARIES})
+# endif()
 # install(TARGETS transform_node
 #         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
 #         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 # )
 
+# cmake_minimum_required(VERSION 3.3)
+# project(butterworth)
 
-# For Nodelet
-# Declare a C++ library
-add_library(transform_nodelet
-  src/transform_nodelet.cpp
-  src/transform.cpp
-)
-target_link_libraries(transform_nodelet ${thirdparty_libraries} ${catkin_LIBRARIES})
-# if(catkin_EXPORTED_LIBRARIES)
-#  add_dependencies(transform_nodelet transform_nodelet ${catkin_EXPORTED_LIBRARIES})
-# endif()
+# find_package(catkin QUIET COMPONENTS roscpp roslib sensor_msgs)
+# catkin_package(CATKIN_DEPENDS roscpp roslib sensor_msgs)
+# include_directories(src ${catkin_INCLUDE_DIRS})
+# add_definitions(-std=c++17)
+# add_executable(butterworth_node src/butterworth.cpp)
 
-install(TARGETS transform_nodelet
-        ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-        LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
-        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+# list(APPEND thirdparty_libraries
+#         ${Boost_LIBRARIES}
+#         ${OpenCV_LIBRARIES}
+#         ${CERES_LIBRARIES}
+#         ${catkin_LIBRARIES}
+# )
+
+
+# target_link_libraries(butterworth_node ${thirdparty_libraries})
+# install(TARGETS butterworth_node
+#         ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#         LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+#         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# )
 

@@ -15,9 +15,11 @@
   <depend>roslib</depend>
   <depend>sensor_msgs</depend>
   <build_depend>nodelet</build_depend>
+  <build_depend>ov_core</build_depend>
+  <exec_depend>ov_core</exec_depend>
   <exec_depend>nodelet</exec_depend>
 
-    <export>
+    <!-- <export>
         <nodelet plugin="${prefix}/transform_nodelet.xml" />
-    </export>
+    </export> -->
 </package>
