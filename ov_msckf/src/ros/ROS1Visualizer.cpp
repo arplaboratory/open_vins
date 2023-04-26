@@ -1,8 +1,8 @@
 /*
  * OpenVINS: An Open Platform for Visual-Inertial Research
- * Copyright (C) 2018-2022 Patrick Geneva
- * Copyright (C) 2018-2022 Guoquan Huang
- * Copyright (C) 2018-2022 OpenVINS Contributors
+ * Copyright (C) 2018-2023 Patrick Geneva
+ * Copyright (C) 2018-2023 Guoquan Huang
+ * Copyright (C) 2018-2023 OpenVINS Contributors
  * Copyright (C) 2018-2019 Kevin Eckenhoff
  *
  * This program is free software: you can redistribute it and/or modify
@@ -354,8 +354,8 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
     T_init_tf(1, 3) = state_est(5);
     T_init_tf(2, 3) = state_est(6);
     //T_init_tf = T_correct * T_init_tf;
-    PRINT_INFO("T_init_tf\n");
-    std::cout << T_init_tf << std::endl;
+    //PRINT_INFO("T_init_tf\n");
+    //std::cout << T_init_tf << std::endl;
     T_init_tf_inv.block(0,0,3,3) = T_init_tf.block(0,0,3,3).transpose();
     T_init_tf_inv.block(0,3,3,1) = -T_init_tf.block(0,0,3,3).transpose()*T_init_tf.block(0,3,3,1);
     T_MtoW = T_MtoW*T_init_tf;
@@ -366,13 +366,38 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
   Eigen::Matrix<double, 13, 1> state_plus = Eigen::Matrix<double, 13, 1>::Zero();
   Eigen::Matrix<double, 12, 12> cov_plus = Eigen::Matrix<double, 12, 12>::Zero();
 
-
  if (!_app->get_propagator()->fast_state_propagate(state, timestamp, state_plus, cov_plus))
    return;
   
-  //  if (!_app->get_propagator()->fast_state_propagate_cache(state, timestamp, state_plus, cov_plus))
-  //    return;
   // 1. publish odomIinM (imu odometry in the vio local frame)
+
+  //  // Get the simulated groundtruth so we can evaulate the error in respect to it
+  //  // NOTE: we get the true time in the IMU clock frame
+  //  if (_sim != nullptr) {
+  //    Eigen::Matrix<double, 17, 1> state_gt;
+  //    if (_sim->get_state(timestamp, state_gt)) {
+  //      // Difference between positions
+  //      double dx = state_plus(4, 0) - state_gt(5, 0);
+  //      double dy = state_plus(5, 0) - state_gt(6, 0);
+  //      double dz = state_plus(6, 0) - state_gt(7, 0);
+  //      double err_pos = std::sqrt(dx * dx + dy * dy + dz * dz);
+  //      // Quaternion error
+  //      Eigen::Matrix<double, 4, 1> quat_gt, quat_st, quat_diff;
+  //      quat_gt << state_gt(1, 0), state_gt(2, 0), state_gt(3, 0), state_gt(4, 0);
+  //      quat_st << state_plus(0, 0), state_plus(1, 0), state_plus(2, 0), state_plus(3, 0);
+  //      quat_diff = quat_multiply(quat_st, Inv(quat_gt));
+  //      double err_ori = (180 / M_PI) * 2 * quat_diff.block(0, 0, 3, 1).norm();
+  //      // Calculate NEES values
+  //      Eigen::Vector3d quat_diff_vec = quat_diff.block(0, 0, 3, 1);
+  //      Eigen::Vector3d cov_vec = cov_plus.block(0, 0, 3, 3).inverse() * 2 * quat_diff.block(0, 0, 3, 1);
+  //      double ori_nees = 2 * quat_diff_vec.dot(cov_vec);
+  //      Eigen::Vector3d errpos = state_plus.block(4, 0, 3, 1) - state_gt.block(5, 0, 3, 1);
+  //      double pos_nees = errpos.transpose() * cov_plus.block(3, 3, 3, 3).inverse() * errpos;
+  //      PRINT_INFO(REDPURPLE "error to gt => %.3f, %.3f (deg,m) | nees => %.1f, %.1f (ori,pos) \n" RESET, err_ori, err_pos, ori_nees,
+  //                 pos_nees);
+  //    }
+  //  }
+
   // Publish our odometry message if requested
   bool published_odomIinM = false;
   nav_msgs::Odometry odomIinM;
@@ -681,9 +706,9 @@ void ROS1Visualizer::callback_inertial(const sensor_msgs::Imu::ConstPtr &msg) {
   _app->feed_measurement_imu(message);
 
   double startTime = ros::Time::now().toSec();
-  std::cout << "The start time is " << ros::Time::now().toSec() << "\n";
+  // std::cout << "The start time is " << ros::Time::now().toSec() << "\n";
   if ((ros::Time::now().toSec() - last_timestamp) >=  pub_frequency){
-    PRINT_INFO(REDPURPLE "visualize_odometry: %4.5f \n\n" RESET, ros::Time::now().toSec() - last_timestamp );
+    PRINT_INFO(REDPURPLE "visualize_odometry: %4.5f \n" RESET, ros::Time::now().toSec() - last_timestamp );
     visualize_odometry(message.timestamp);
     last_timestamp = ros::Time::now().toSec();
   }
@@ -739,8 +764,8 @@ void ROS1Visualizer::callback_inertial(const sensor_msgs::Imu::ConstPtr &msg) {
   }
 
   double dt = ros::Time::now().toSec() - startTime;
-  std::cout << "The end time is " << ros::Time::now() << "\n";
-  std::cout << "The dt is " << dt << "\n";
+  //std::cout << "The end time is " << ros::Time::now() << "\n";
+  //std::cout << "The dt is " << dt << "\n";
 }
 
 void ROS1Visualizer::callback_monocular(const sensor_msgs::ImageConstPtr &msg0, int cam_id0) {
