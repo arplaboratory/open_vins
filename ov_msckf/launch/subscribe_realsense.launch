@@ -66,7 +66,6 @@
     </group>
 
     <group ns="$(arg mav_name)">
-
         <!-- nodelet manager for ovmsckf, realsense2_camera and odom_transform -->
         <node pkg="nodelet" type="nodelet" args="manager"
             name="ovmsckf_nodelet_manager" output="screen">
@@ -143,5 +142,6 @@
             <rosparam file="$(find odom_transform)/config/transform.yaml" />
             <remap from="~odomimu" to="OvmsckfNodeletClass_loader/odomimu"/>
         </node-->
+
     </group>
 </launch>
