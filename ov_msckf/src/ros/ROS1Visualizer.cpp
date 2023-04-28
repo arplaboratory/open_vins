@@ -354,11 +354,12 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
     T_init_tf(1, 3) = state_est(5);
     T_init_tf(2, 3) = state_est(6);
     //T_init_tf = T_correct * T_init_tf;
-    //PRINT_INFO("T_init_tf\n");
-    //std::cout << T_init_tf << std::endl;
+    PRINT_INFO("T_init_tf\n");
+    std::cout << T_init_tf << std::endl;
     T_init_tf_inv.block(0,0,3,3) = T_init_tf.block(0,0,3,3).transpose();
     T_init_tf_inv.block(0,3,3,1) = -T_init_tf.block(0,0,3,3).transpose()*T_init_tf.block(0,3,3,1);
     T_MtoW = T_MtoW*T_init_tf;
+    std::cout<<T_MtoW<<std::endl;
     got_init_tf = true;
 
   }
@@ -497,8 +498,9 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
     T_ItoW = T_MtoW*T_ItoM;
 
     // TRANSLATION SOLVED if using JPL convention
-    T_ItoM.block(0,3,3,1) = T_init_tf_inv.block(0,0,3,3) * T_ItoM.block(0,3,3,1); 
-    T_ItoM.block(0,0,3,3) = T_init_tf_inv.block(0,0,3,3) * T_ItoM.block(0,0,3,3) ; 
+    //T_ItoM.block(0,3,3,1) = T_init_tf_inv.block(0,0,3,3) * T_ItoM.block(0,3,3,1); 
+    //T_ItoM.block(0,0,3,3) = T_init_tf_inv.block(0,0,3,3) * T_ItoM.block(0,0,3,3) ; 
+    T_ItoM = T_init_tf_inv * T_ItoM;
     
     // The TF that is required for flight test
     Eigen::Matrix4d T_BtoB0 = (T_ItoB * T_ItoM * T_BtoI);
