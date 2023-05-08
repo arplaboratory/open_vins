@@ -230,6 +230,7 @@ protected:
   float imu_rate = 0;
   float odom_rate = 0;
   double last_timestamp = 0;
+  double last_timestamp_inertial = 0;
 };
 
 } // namespace ov_msckf

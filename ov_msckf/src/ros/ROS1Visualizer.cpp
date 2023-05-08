@@ -470,7 +470,9 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
   // Publish our odometry message if requested
   nav_msgs::Odometry odomBinW;
   Eigen::Matrix<double, 13, 1> state_plus_world = Eigen::Matrix<double, 13, 1>::Zero();
+  /*
   if (pub_odomworld.getNumSubscribers() != 0) {
+    ROS_INFO("subscribed to odomworld, doing TF in ov_msckf!");
     // calculate the new state_plus
     
     state_plus_world = state_plus;
@@ -633,6 +635,7 @@ void ROS1Visualizer::visualize_odometry(double timestamp) {
     }
     pub_odomworldB0.publish(odomBinB0);
   }
+  */
   // NOTE: since we use JPL we have an implicit conversion to Hamilton when we publish
   // NOTE: a rotation from GtoI in JPL has the same xyzw as a ItoG Hamilton rotation
   auto odom_pose_world = std::make_shared<ov_type::PoseJPL>();
@@ -709,12 +712,15 @@ void ROS1Visualizer::callback_inertial(const sensor_msgs::Imu::ConstPtr &msg) {
 
   double startTime = ros::Time::now().toSec();
   // std::cout << "The start time is " << ros::Time::now().toSec() << "\n";
-  if ((ros::Time::now().toSec() - last_timestamp) >=  pub_frequency){
-    PRINT_INFO(REDPURPLE "visualize_odometry: %4.5f \n" RESET, ros::Time::now().toSec() - last_timestamp );
+  double current_timestamp = startTime;
+  //if ((current_timestamp - last_timestamp) >=  pub_frequency){
+  //  PRINT_INFO(REDPURPLE "visualize_odometry: %4.5f \n" RESET, current_timestamp - last_timestamp );
     visualize_odometry(message.timestamp);
-    last_timestamp = ros::Time::now().toSec();
-  }
+  //  last_timestamp = current_timestamp; 
+  //}
 
+  PRINT_INFO("inertial callback hz: %4.5f\n" RESET, 1/(startTime - last_timestamp_inertial));
+  last_timestamp_inertial = startTime; 
   // visualize_odometry(message.timestamp);
   // PRINT_INFO(REDPURPLE "skip_count: %d/ %d \n\n" RESET,skip_count,  pub_frequency);
   

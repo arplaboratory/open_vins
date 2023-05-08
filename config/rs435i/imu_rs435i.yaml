@@ -58,5 +58,5 @@ imu0:
   # rostopic: /zed_nodelet/imu/data_raw_filtered
   rostopic: cam1/imu
   time_offset:  0.0052559264670291456
-  update_rate: 400.0
-  odom_update_rate: 120.0
+  update_rate: 200.0
+  odom_update_rate: 200.0
