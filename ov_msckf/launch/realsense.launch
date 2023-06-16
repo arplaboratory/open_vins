@@ -2,7 +2,7 @@
     <arg name="mav_name" default="$(optenv MAV_NAME quadrotor)"/>
 
     <!-- what config we are going to run (should match folder name) -->
-    <arg name="verbosity"   default="SILENT" /> <!-- ALL, DEBUG, INFO, WARNING, ERROR, SILENT -->
+    <arg name="verbosity"   default="WARNING" /> <!-- ALL, DEBUG, INFO, WARNING, ERROR, SILENT -->
     <arg name="config"      default="rs435i" /> <!-- euroc_mav, tum_vi, rpng_aruco -->
     <arg name="config_path" default="$(find ov_msckf)/../config/$(arg config)/estimator_config.yaml" />
 
@@ -72,7 +72,7 @@
         </node>
 
         <!-- nodelet of openvins -->
-	    <node pkg="nodelet" type="nodelet" args="load ovmsckf_nodelet/OvmsckfNodeletClass ovmsckf_nodelet_manager"
+	    <!--node pkg="nodelet" type="nodelet" args="load ovmsckf_nodelet/OvmsckfNodeletClass ovmsckf_nodelet_manager"
             name="OvmsckfNodeletClass_loader" output="screen">
             <param name="mav_name" type="string" value="$(arg mav_name)"/>
             <param name="config_path"            type="string" value="$(arg config_path)" />
@@ -82,7 +82,7 @@
             <remap from="~cam1/infra1/image_rect_raw" to="cam1/infra1/image_rect_raw"/>
             <remap from="~cam1/infra2/image_rect_raw" to="cam1/infra2/image_rect_raw"/>
             <remap from="~cam1/imu" to="cam1/imu"/>
-	    </node>
+	    </node-->
 
 
         <!-- config for openvins -->

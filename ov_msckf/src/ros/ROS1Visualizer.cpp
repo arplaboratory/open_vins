@@ -719,7 +719,7 @@ void ROS1Visualizer::callback_inertial(const sensor_msgs::Imu::ConstPtr &msg) {
   //  last_timestamp = current_timestamp; 
   //}
 
-  PRINT_INFO("inertial callback hz: %4.5f\n" RESET, 1/(startTime - last_timestamp_inertial));
+  //PRINT_INFO("inertial callback hz: %4.5f\n" RESET, 1/(startTime - last_timestamp_inertial));
   last_timestamp_inertial = startTime; 
   // visualize_odometry(message.timestamp);
   // PRINT_INFO(REDPURPLE "skip_count: %d/ %d \n\n" RESET,skip_count,  pub_frequency);
