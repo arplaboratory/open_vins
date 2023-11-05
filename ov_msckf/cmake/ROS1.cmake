@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.3)
 
 # Find ROS build system
-find_package(catkin QUIET COMPONENTS roscpp rosbag tf std_msgs geometry_msgs sensor_msgs nav_msgs visualization_msgs image_transport cv_bridge ov_core ov_init)
+find_package(catkin QUIET COMPONENTS roscpp rosbag tf std_msgs geometry_msgs sensor_msgs nav_msgs visualization_msgs image_transport cv_bridge ov_core ov_init nodelet)
 
 # Describe ROS project
 option(ENABLE_ROS "Enable or disable building with ROS (if it is found)" ON)
@@ -168,22 +168,6 @@ install(DIRECTORY launch/
         DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
 )
 
-
-find_package(catkin REQUIRED COMPONENTS
-  roscpp
-  nodelet
-)
-
-catkin_package(
-#  INCLUDE_DIRS include
-  LIBRARIES ${PROJECT_NAME}
-  CATKIN_DEPENDS roscpp nodelet
-#  DEPENDS system_lib
-)
-
-include_directories(
-  ${catkin_INCLUDE_DIRS}
-)
 
 ## Declare a C++ library
 add_library(ovmsckf_nodelet
