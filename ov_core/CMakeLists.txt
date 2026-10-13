@@ -15,7 +15,7 @@ message(STATUS "OPENCV: " ${OpenCV_VERSION} " | BOOST: " ${Boost_VERSION})
 option(ENABLE_ROS "Enable or disable building with ROS (if it is found)" ON)
 
 # If we will compile with aruco support
-option(ENABLE_ARUCO_TAGS "Enable or disable aruco tag (disable if no contrib modules)" ON)
+option(ENABLE_ARUCO_TAGS "Enable or disable aruco tag (disable if no contrib modules)" OFF)
 if (NOT ENABLE_ARUCO_TAGS)
     add_definitions(-DENABLE_ARUCO_TAGS=0)
     message(WARNING "DISABLING ARUCOTAG TRACKING!")

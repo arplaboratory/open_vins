@@ -596,7 +596,13 @@ void StateHelper::augment_clone(std::shared_ptr<State> state, Eigen::Matrix<doub
   }
 
   // Append the new clone to our clone vector
-  state->_clones_IMU[state->_timestamp] = pose;
+  // Lock the mutex since margtimestep() (called from the IMU callback thread) iterates
+  // _clones_IMU while only holding this same lock; without it, insertion here can race
+  // with that iteration and corrupt the map (manifests as a segfault in std::_Rb_tree_increment).
+  {
+    std::lock_guard<std::mutex> lock(state->_mutex_state);
+    state->_clones_IMU[state->_timestamp] = pose;
+  }
 
   // If we are doing time calibration, then our clones are a function of the time offset
   // Logic is based on Mingyang Li and Anastasios I. Mourikis paper:
